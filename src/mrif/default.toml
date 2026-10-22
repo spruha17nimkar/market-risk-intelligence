@@ -1,0 +1,63 @@
+# Cross-Asset Market Risk Intelligence Framework: default configuration.
+# Every value here is copied into each run's manifest so results can be traced back.
+
+[data]
+source = "yahoo"          # "yahoo" (Yahoo Finance, adjusted closes) or "synthetic"
+start = "2007-04-11"      # first common date for all five proxies (HYG inception)
+end = "2025-12-31"
+cache_dir = "data"
+
+# Risk factor -> liquid ETF proxy
+[assets]
+equities = "SPY"          # S&P 500
+rates = "TLT"             # 20+ year US Treasuries (duration)
+credit = "HYG"            # US high-yield corporate bonds (credit spread)
+fx = "UUP"                # US Dollar Index bullish fund (DXY proxy)
+commodities = "DBC"       # Diversified commodity index (GSCI-style proxy)
+
+# Static long-only portfolio weights (must sum to 1)
+[weights]
+equities = 0.40
+rates = 0.30
+credit = 0.15
+fx = 0.05
+commodities = 0.10
+
+[risk]
+window = 252              # rolling estimation window (one trading year)
+var_levels = [0.99, 0.975]
+es_level = 0.975          # FRTB expected shortfall confidence level
+ewma_lambda = 0.94        # RiskMetrics decay for the volatility-responsive benchmark
+
+[features]
+vol_window = 21
+corr_window = 63
+drawdown_window = 252
+duration_pair = ["equities", "rates"]
+risk_assets = ["equities", "credit", "commodities"]   # for the risk-asset correlation diagnostic
+
+[regime]
+# Ground-truth stress labels: widely recognised market stress episodes (start, end, name).
+# This is a documented judgement call and should be reviewed as part of model validation.
+episodes = [
+    ["2008-09-01", "2009-03-31", "Global Financial Crisis"],
+    ["2010-05-03", "2010-07-02", "Flash Crash / Euro sovereign crisis I"],
+    ["2011-07-25", "2011-10-31", "US downgrade / Euro sovereign crisis II"],
+    ["2015-08-17", "2015-09-30", "China devaluation"],
+    ["2016-01-04", "2016-02-29", "Oil collapse / China growth scare"],
+    ["2018-02-01", "2018-02-28", "Volmageddon"],
+    ["2018-10-01", "2018-12-31", "Q4 2018 sell-off"],
+    ["2020-02-20", "2020-04-30", "COVID-19 crash"],
+    ["2022-01-03", "2022-10-31", "Inflation / rate shock"],
+    ["2023-03-08", "2023-03-31", "US regional bank failures"],
+    ["2025-04-02", "2025-04-30", "Tariff shock"],
+]
+
+[classifier]
+C = 1.0
+class_weight = "balanced"
+first_oos_year = 2012     # walk-forward: refit each January on all prior data
+threshold = 0.5
+
+[governance]
+runs_dir = "runs"
